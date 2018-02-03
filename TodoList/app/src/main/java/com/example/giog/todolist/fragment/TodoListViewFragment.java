@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -133,6 +134,7 @@ public class TodoListViewFragment extends Fragment {
             mTodoNameTextView.setText(mTodoModel.getmName());
             mTodoDateTextView.setText(mTodoModel.getmDate().toString());
             mTodoCompleted.setChecked(mTodoModel.getmCompleted());
+            mTodoCompleted.setClickable(false);
             if(!mTodoModel.getmImage().isEmpty()){
                 File imgFile = new File(mTodoModel.getmImage());
                 if(imgFile.exists()){

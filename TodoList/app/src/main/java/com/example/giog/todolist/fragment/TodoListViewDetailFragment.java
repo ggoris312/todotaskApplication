@@ -151,6 +151,8 @@ public class TodoListViewDetailFragment extends Fragment {
             }
         });
 
+        mNoteEdit.setText(mTodoModel.getmNotes());
+
         mNoteEdit.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -160,6 +162,7 @@ public class TodoListViewDetailFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 mTodoModel.setmNotes(s.toString());
+                TodoLab.get(getActivity()).updateTodo(mTodoModel);
             }
 
             @Override
@@ -219,11 +222,8 @@ public class TodoListViewDetailFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 dialog.dismiss();
+                dispatchTakePictureIntent();
 
-                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
-                    startActivityForResult(takePictureIntent, REQUEST_CODE_CAPTURE_IMAGE);
-                }
 
             }
         });
@@ -234,7 +234,7 @@ public class TodoListViewDetailFragment extends Fragment {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        File storageDir = getActivity().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File image = File.createTempFile(
                 imageFileName,  /* prefix */
                 ".jpg",         /* suffix */
@@ -246,11 +246,38 @@ public class TodoListViewDetailFragment extends Fragment {
         return image;
     }
 
+    private void dispatchTakePictureIntent(){
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(getActivity(),
+                        "com.example.android.fileprovider",
+                        photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, REQUEST_CODE_CAPTURE_IMAGE);
+            }
+        }
+    }
+
+    private void galleryAddPic() {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(mCurrentPhotoPath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        getActivity().sendBroadcast(mediaScanIntent);
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch(requestCode) {
-            case 0:
+            case PHOTO_PICKER_ID:
                 if(resultCode == RESULT_OK){
                     Uri selectedImage = data.getData();
                     String[] projection = { MediaStore.Images.Media.DATA };
@@ -269,12 +296,17 @@ public class TodoListViewDetailFragment extends Fragment {
                 }
 
                 break;
-            case 1:
+            case REQUEST_CODE_CAPTURE_IMAGE:
                 if(resultCode == RESULT_OK){
-                    Uri selectedImage = data.getData();
-                    File mFile = new File(selectedImage.getPath());
-                    mTodoModel.setmImage(mFile.getAbsolutePath());
-                    mTodoImage.setImageURI(selectedImage);
+                    galleryAddPic();
+                    mTodoModel.setmImage(mCurrentPhotoPath);
+                    File imgFile = new File(mCurrentPhotoPath);
+                    if(imgFile.exists()){
+                        Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                        mTodoImage.setImageBitmap(myBitmap);
+                    }else{
+                        mTodoModel.setmImage("");
+                    }
                     updateTodo();
                 }
                 break;

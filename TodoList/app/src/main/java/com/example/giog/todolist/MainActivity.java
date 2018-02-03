@@ -23,6 +23,11 @@ public class MainActivity extends AppCompatActivity implements TodoListViewFragm
         return result == PackageManager.PERMISSION_GRANTED;
     }
 
+    private boolean checkIfAlreadyhaveCameraPermission() {
+        int result = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        return result == PackageManager.PERMISSION_GRANTED;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,6 +39,10 @@ public class MainActivity extends AppCompatActivity implements TodoListViewFragm
         if (MyVersion > Build.VERSION_CODES.LOLLIPOP_MR1) {
             if (!checkIfAlreadyhavePermission()) {
                 ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+            }
+
+            if(!checkIfAlreadyhaveCameraPermission()){
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 2);
             }
         }
 

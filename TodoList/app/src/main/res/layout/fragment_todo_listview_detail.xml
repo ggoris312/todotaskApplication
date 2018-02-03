@@ -95,6 +95,7 @@
         android:ems="10"
         android:hint="Notes"
         android:inputType="textPersonName"
+        android:singleLine="false"
         app:layout_constraintBottom_toBottomOf="@+id/delete_todo_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
